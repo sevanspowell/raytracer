@@ -12,6 +12,22 @@
 
 using namespace trc;
 
+std::random_device randDevice;
+std::mt19937 mt(randDevice());
+std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+/// Rejection method for getting a random point inside a unit sphere.
+Vec3 randomInUnitSphere() {
+    Vec3 pt;
+
+    // Pick a random point in a cube and reject it if outside of sphere
+    do {
+        pt = 2.0f * Vec3(dist(mt), dist(mt), dist(mt)) - Vec3(1.0f, 1.0f, 1.0f);
+    } while (vec3::squared_length(pt) >= 1.0f);
+
+    return pt;
+}
+
 /// Convert a float in the range [0.0f - 1.0f] to a byte in the range [0 - 255].
 /// Modified from
 /// http://stackoverflow.com/questions/1914115/converting-color-value-from-float-0-1-to-byte-0-255
@@ -74,9 +90,10 @@ Vec3 color_normal(const Ray &ray) {
 
 Vec3 color(const Ray &ray, const std::shared_ptr<Surface> &world) {
     HitRecord rec;
-    if (world->hit(ray, 0.0f, SCALAR_MAX, &rec)) {
-        return 0.5f * Vec3(rec.normal.x + 1.0f, rec.normal.y + 1.0f,
-                           rec.normal.z + 1.0f);
+    // Ignore hits very close to 0
+    if (world->hit(ray, 0.001f, SCALAR_MAX, &rec)) {
+        Vec3 target = rec.hitPoint + rec.normal + randomInUnitSphere();
+        return 0.5f * color(Ray(rec.hitPoint, target - rec.hitPoint), world);
     } else {
         return color_lerp(ray);
     }
@@ -86,10 +103,6 @@ int main() {
     int nx = 200;
     int ny = 100;
     int ns = 100; // Number of samples to take for each pixel
-
-    std::random_device randDevice;
-    std::mt19937 mt(randDevice());
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
 
     std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
@@ -119,6 +132,9 @@ int main() {
 
             // Average samples
             col /= float(ns);
+
+            // Gamma correct colour
+            col = gammaCorrect(col, 2.0f);
 
             int ir = floatToByte(col.x);
             int ig = floatToByte(col.y);
