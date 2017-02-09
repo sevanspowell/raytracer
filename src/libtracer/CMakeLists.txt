@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(libtracer VERSION 0.0.1 LANGUAGES C CXX)
 
 add_library(tracer
+  src/Sphere.cpp
+  src/SurfaceList.cpp
   src/Vec3.cpp
   )
 

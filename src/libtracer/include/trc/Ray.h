@@ -25,7 +25,7 @@ public:
 
     /// \returns Point in space along the ray at the given parameter (e.g.
     /// time).
-    Vec3 point_at_parameter(float t) const
+    Vec3 pointAtParameter(float t) const
     {
         return origin_ + t * dir_;
     }
