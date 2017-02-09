@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(libtracer VERSION 0.0.1 LANGUAGES C CXX)
 
 add_library(tracer
-
+  src/Vec3.cpp
   )
 
 target_include_directories(tracer
