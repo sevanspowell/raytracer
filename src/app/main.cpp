@@ -21,14 +21,19 @@ inline float gammaCorrect(float colorValue, float gamma)
     return pow(colorValue, 1.0 / gamma);
 }
 
-bool hit_sphere(const trc::Vec3 &center, float radius, const trc::Ray &ray)
+float hit_sphere(const trc::Vec3 &center, float radius, const trc::Ray &ray)
 {
     const trc::Vec3 oc = ray.origin() - center;
     float a = trc::vec3::dot(ray.direction(), ray.direction());
     float b = 2.0f * trc::vec3::dot(oc, ray.direction());
     float c = trc::vec3::dot(oc, oc) - radius * radius;
-
     float discriminant = b * b - 4 * a * c;
+
+    if (discriminant < 0) {
+        return -1.0f;
+    } else {
+        return (-b - sqrt(discriminant)) / (2.0f * a);
+    }
 
     return (discriminant > 0);
 }
@@ -46,11 +51,21 @@ trc::Vec3 color_lerp(const trc::Ray &ray)
 
 trc::Vec3 color_sphere(const trc::Ray &ray)
 {
-    if (hit_sphere(trc::Vec3(0.0f, 0.0f, -1.0f), 0.5f, ray)) {
-        return trc::Vec3(1.0f, 0.0f, 1.0f);
+    const trc::Vec3 sphereOrigin(0.0f, 0.0f, -1.0f);
+
+    // Get how far to move along ray before hitting sphere
+    float t = hit_sphere(sphereOrigin, 0.5f, ray);
+    if (t > 0.0) {
+        // Construct normal using hit point
+        const trc::Vec3 normal =
+            trc::vec3::normalize(ray.point_at_parameter(t) - sphereOrigin);
+        // Put on range [0,1]
+        return 0.5f * trc::Vec3(normal.x + 1.0f, normal.y + 1.0f,
+                                normal.z + 1.0f);
     } else {
         return color_lerp(ray);
     }
+
 }
 
 int main()
