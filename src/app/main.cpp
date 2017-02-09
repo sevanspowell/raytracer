@@ -21,7 +21,19 @@ inline float gammaCorrect(float colorValue, float gamma)
     return pow(colorValue, 1.0 / gamma);
 }
 
-trc::Vec3 color(const trc::Ray &ray)
+bool hit_sphere(const trc::Vec3 &center, float radius, const trc::Ray &ray)
+{
+    const trc::Vec3 oc = ray.origin() - center;
+    float a = trc::vec3::dot(ray.direction(), ray.direction());
+    float b = 2.0f * trc::vec3::dot(oc, ray.direction());
+    float c = trc::vec3::dot(oc, oc) - radius * radius;
+
+    float discriminant = b * b - 4 * a * c;
+
+    return (discriminant > 0);
+}
+
+trc::Vec3 color_lerp(const trc::Ray &ray)
 {
     trc::Vec3 unitDir = trc::vec3::normalize(ray.direction());
     // Convert -1.0 < y < 1.0 to 0.0 < t < 1.0
@@ -30,6 +42,15 @@ trc::Vec3 color(const trc::Ray &ray)
     // Linear interpolation formula = (1 - t) * start_value + t * end_value
     return (1.0 - t) * trc::Vec3(1.0f, 1.0f, 1.0f) +
            t * trc::Vec3(0.5f, 0.7f, 1.0f);
+}
+
+trc::Vec3 color_sphere(const trc::Ray &ray)
+{
+    if (hit_sphere(trc::Vec3(0.0f, 0.0f, -1.0f), 0.5f, ray)) {
+        return trc::Vec3(1.0f, 0.0f, 1.0f);
+    } else {
+        return color_lerp(ray);
+    }
 }
 
 int main()
@@ -49,7 +70,7 @@ int main()
             float v = float(j) / float(ny);
             trc::Ray ray(origin,
                          lowerLeftCorner + u * horizontal + v * vertical);
-            trc::Vec3 col = color(ray);
+            trc::Vec3 col = color_sphere(ray);
             int ir = floatToByte(col.x);
             int ig = floatToByte(col.y);
             int ib = floatToByte(col.z);
