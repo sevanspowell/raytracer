@@ -5,6 +5,7 @@
 #include <random>
 
 #include <trc/Camera.h>
+#include <trc/DielectricMaterial.h>
 #include <trc/LambertianMaterial.h>
 #include <trc/MetalMaterial.h>
 #include <trc/Ray.h>
@@ -125,13 +126,13 @@ int main() {
     std::shared_ptr<SurfaceList> world(new SurfaceList());
 
     std::shared_ptr<LambertianMaterial> mat1(
-        new LambertianMaterial(Vec3(0.8f, 0.3f, 0.3f)));
+        new LambertianMaterial(Vec3(0.1f, 0.2f, 0.5f)));
     std::shared_ptr<LambertianMaterial> mat2(
         new LambertianMaterial(Vec3(0.8f, 0.8f, 0.0f)));
     std::shared_ptr<MetalMaterial> mat3(
-        new MetalMaterial(Vec3(0.8f, 0.6f, 0.2f), 1.0f));
-    std::shared_ptr<MetalMaterial> mat4(
-        new MetalMaterial(Vec3(0.8f, 0.8f, 0.8f), 0.3f));
+        new MetalMaterial(Vec3(0.8f, 0.6f, 0.2f), 0.0f));
+    std::shared_ptr<DielectricMaterial> mat4(new DielectricMaterial(1.5f));
+    std::shared_ptr<DielectricMaterial> mat5(new DielectricMaterial(1.5f));
 
     world->addSurface(std::shared_ptr<Sphere>(
         new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, mat1)));
@@ -141,6 +142,8 @@ int main() {
         new Sphere(Vec3(1.0f, 0.0f, -1.0f), 0.5f, mat3)));
     world->addSurface(std::shared_ptr<Sphere>(
         new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, mat4)));
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(-1.0f, 0.0f, -1.0f), -0.45f, mat5)));
 
     for (int j = ny - 1; j >= 0; j--) {
         for (int i = 0; i < nx; ++i) {
