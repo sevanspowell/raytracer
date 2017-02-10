@@ -22,6 +22,7 @@ bool Sphere::hit(const Ray &ray, float tMin, float tMax,
                 recordOut->hitPoint = ray.pointAtParameter(recordOut->t);
                 recordOut->normal =
                     vec3::normalize((recordOut->hitPoint - center_));
+                recordOut->material = material_;
             }
 
             result = true;
@@ -33,6 +34,7 @@ bool Sphere::hit(const Ray &ray, float tMin, float tMax,
                     recordOut->hitPoint = ray.pointAtParameter(recordOut->t);
                     recordOut->normal =
                         vec3::normalize((recordOut->hitPoint - center_));
+                    recordOut->material = material_;
                 }
 
                 result = true;

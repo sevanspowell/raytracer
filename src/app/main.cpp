@@ -5,6 +5,8 @@
 #include <random>
 
 #include <trc/Camera.h>
+#include <trc/LambertianMaterial.h>
+#include <trc/MetalMaterial.h>
 #include <trc/Ray.h>
 #include <trc/Sphere.h>
 #include <trc/SurfaceList.h>
@@ -88,12 +90,20 @@ Vec3 color_normal(const Ray &ray) {
     }
 }
 
-Vec3 color(const Ray &ray, const std::shared_ptr<Surface> &world) {
+/// \param   depth   Used to indicate number of recursions
+Vec3 color(const Ray &ray, const std::shared_ptr<Surface> &world, int depth) {
     HitRecord rec;
     // Ignore hits very close to 0
     if (world->hit(ray, 0.001f, SCALAR_MAX, &rec)) {
-        Vec3 target = rec.hitPoint + rec.normal + randomInUnitSphere();
-        return 0.5f * color(Ray(rec.hitPoint, target - rec.hitPoint), world);
+        Ray scattered;
+        Vec3 attenuation;
+        if (depth < 50 &&
+            rec.material->scatter(ray, rec, &attenuation, &scattered)) {
+            return vec3::multiply(attenuation,
+                                  color(scattered, world, depth + 1));
+        } else {
+            return Vec3(0.0f, 0.0f, 0.0f);
+        }
     } else {
         return color_lerp(ray);
     }
@@ -113,10 +123,14 @@ int main() {
     Camera cam(origin, lowerLeftCorner, horizontal, vertical);
 
     std::shared_ptr<SurfaceList> world(new SurfaceList());
-    world->addSurface(
-        std::shared_ptr<Sphere>(new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f)));
+    std::shared_ptr<MetalMaterial> mat1(
+        new MetalMaterial(Vec3(0.8f, 0.8f, 0.8f)));
+    std::shared_ptr<LambertianMaterial> mat2(
+        new LambertianMaterial(Vec3(0.8f, 0.3f, 0.3f)));
     world->addSurface(std::shared_ptr<Sphere>(
-        new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f)));
+        new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, mat1)));
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, mat2)));
 
     for (int j = ny - 1; j >= 0; j--) {
         for (int i = 0; i < nx; ++i) {
@@ -127,7 +141,7 @@ int main() {
                 float v = float(j + dist(mt)) / float(ny);
                 Ray ray = cam.getRay(u, v);
                 Vec3 p  = ray.pointAtParameter(2.0f);
-                col += color(ray, world);
+                col += color(ray, world, 0);
             }
 
             // Average samples
