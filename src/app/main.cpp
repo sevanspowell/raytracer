@@ -123,14 +123,24 @@ int main() {
     Camera cam(origin, lowerLeftCorner, horizontal, vertical);
 
     std::shared_ptr<SurfaceList> world(new SurfaceList());
-    std::shared_ptr<MetalMaterial> mat1(
-        new MetalMaterial(Vec3(0.8f, 0.8f, 0.8f)));
-    std::shared_ptr<LambertianMaterial> mat2(
+
+    std::shared_ptr<LambertianMaterial> mat1(
         new LambertianMaterial(Vec3(0.8f, 0.3f, 0.3f)));
+    std::shared_ptr<LambertianMaterial> mat2(
+        new LambertianMaterial(Vec3(0.8f, 0.8f, 0.0f)));
+    std::shared_ptr<MetalMaterial> mat3(
+        new MetalMaterial(Vec3(0.8f, 0.6f, 0.2f), 1.0f));
+    std::shared_ptr<MetalMaterial> mat4(
+        new MetalMaterial(Vec3(0.8f, 0.8f, 0.8f), 0.3f));
+
     world->addSurface(std::shared_ptr<Sphere>(
         new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, mat1)));
     world->addSurface(std::shared_ptr<Sphere>(
         new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, mat2)));
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(1.0f, 0.0f, -1.0f), 0.5f, mat3)));
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, mat4)));
 
     for (int j = ny - 1; j >= 0; j--) {
         for (int i = 0; i < nx; ++i) {
