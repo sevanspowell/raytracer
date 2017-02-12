@@ -19,6 +19,8 @@ std::random_device randDevice;
 std::mt19937 mt(randDevice());
 std::uniform_real_distribution<double> dist(0.0, 1.0);
 
+inline float degToRad(float degrees) { return ((degrees * M_PI) / 180.0f); }
+
 /// Rejection method for getting a random point inside a unit sphere.
 Vec3 randomInUnitSphere() {
     Vec3 pt;
@@ -121,7 +123,8 @@ int main() {
     const Vec3 horizontal(4.0f, 0.0f, 0.0f);
     const Vec3 vertical(0.0f, 2.0f, 0.0f);
     const Vec3 origin(0.0f, 0.0f, 0.0f);
-    Camera cam(origin, lowerLeftCorner, horizontal, vertical);
+    Camera cam(0.15f * Vec3(-2, 5, 1), Vec3(0, 0, -1), Vec3(0, 1, 0),
+               degToRad(90.0f), float(nx) / float(ny));
 
     std::shared_ptr<SurfaceList> world(new SurfaceList());
 
