@@ -112,9 +112,64 @@ Vec3 color(const Ray &ray, const std::shared_ptr<Surface> &world, int depth) {
     }
 }
 
+std::shared_ptr<SurfaceList> getRandomScene() {
+    int n = 500;
+    std::shared_ptr<SurfaceList> world(new SurfaceList());
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(0.0f, -1000.0f, 0.0f), 1000.0f,
+                   std::shared_ptr<LambertianMaterial>(
+                       new LambertianMaterial(Vec3(0.5f, 0.5f, 0.5f))))));
+    int i = 1;
+    for (int a = -11; a < 11; ++a) {
+        for (int b = -11; b < 11; ++b) {
+            float chooseMat = trc_rnd::getRandom0To1();
+            Vec3 center(a + 0.9f * trc_rnd::getRandom0To1(), 0.2f,
+                        b + 0.9f * trc_rnd::getRandom0To1());
+            if (vec3::length(center - Vec3(4.0f, 0.2f, 0.0f)) > 0.9f) {
+                if (chooseMat < 0.8f) { // Diffuse
+                    world->addSurface(std::shared_ptr<Sphere>(new Sphere(
+                        center, 0.2f,
+                        std::shared_ptr<LambertianMaterial>(
+                            new LambertianMaterial(Vec3(
+                                trc_rnd::getRandom0To1() * trc_rnd::getRandom0To1(),
+                                trc_rnd::getRandom0To1() * trc_rnd::getRandom0To1(),
+                                trc_rnd::getRandom0To1() *
+                                    trc_rnd::getRandom0To1()))))));
+                } else if (chooseMat < 0.95f) { // Metal
+                    world->addSurface(std::shared_ptr<Sphere>(new Sphere(
+                        center, 0.2f,
+                        std::shared_ptr<MetalMaterial>(new MetalMaterial(
+                            Vec3(0.5f * (1.0f + trc_rnd::getRandom0To1()),
+                                 0.5f * (1.0f + trc_rnd::getRandom0To1()),
+                                 0.5f * (1.0f + trc_rnd::getRandom0To1())),
+                            0.5f * trc_rnd::getRandom0To1())))));
+                } else { // Glass
+                    world->addSurface(std::shared_ptr<Sphere>(new Sphere(
+                        center, 0.2f, std::shared_ptr<DielectricMaterial>(
+                                          new DielectricMaterial(1.5f)))));
+                }
+            }
+        }
+    }
+
+    world->addSurface(std::shared_ptr<Sphere>(new Sphere(
+        Vec3(0.0f, 1.0f, 0.0f), 1.0f,
+        std::shared_ptr<DielectricMaterial>(new DielectricMaterial(1.5f)))));
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(-4.0f, 1.0f, 0), 1.0f,
+                   std::shared_ptr<LambertianMaterial>(
+                       new LambertianMaterial(Vec3(0.4f, 0.2f, 0.1f))))));
+    world->addSurface(std::shared_ptr<Sphere>(
+        new Sphere(Vec3(4.0f, 1.0f, 0), 1.0f,
+                   std::shared_ptr<MetalMaterial>(
+                       new MetalMaterial(Vec3(0.7f, 0.6f, 0.5f), 0.0f)))));
+
+    return world;
+}
+
 int main() {
-    int nx = 200;
-    int ny = 100;
+    int nx = 640;
+    int ny = 480;
     int ns = 100; // Number of samples to take for each pixel
 
     std::cout << "P3\n" << nx << " " << ny << "\n255\n";
@@ -123,30 +178,40 @@ int main() {
     const Vec3 horizontal(4.0f, 0.0f, 0.0f);
     const Vec3 vertical(0.0f, 2.0f, 0.0f);
     const Vec3 origin(0.0f, 0.0f, 0.0f);
-    Camera cam(0.15f * Vec3(-2, 5, 1), Vec3(0, 0, -1), Vec3(0, 1, 0),
-               degToRad(90.0f), float(nx) / float(ny));
+    Vec3 lookFrom(13.0f, 2.0f, 3.0f);
+    Vec3 lookAt(0.0f, 0.0f, 0.0f);
+    // float distToFocus = vec3::length(lookFrom - lookAt);
+    float distToFocus = 10.0f;
+    float aperture    = 0.1f;
+    Camera cam(lookFrom, lookAt, Vec3(0, 1, 0), degToRad(20.0f),
+               float(nx) / float(ny), aperture, distToFocus);
 
-    std::shared_ptr<SurfaceList> world(new SurfaceList());
+    // std::shared_ptr<SurfaceList> world(new SurfaceList());
 
-    std::shared_ptr<LambertianMaterial> mat1(
-        new LambertianMaterial(Vec3(0.1f, 0.2f, 0.5f)));
-    std::shared_ptr<LambertianMaterial> mat2(
-        new LambertianMaterial(Vec3(0.8f, 0.8f, 0.0f)));
-    std::shared_ptr<MetalMaterial> mat3(
-        new MetalMaterial(Vec3(0.8f, 0.6f, 0.2f), 0.0f));
-    std::shared_ptr<DielectricMaterial> mat4(new DielectricMaterial(1.5f));
-    std::shared_ptr<DielectricMaterial> mat5(new DielectricMaterial(1.5f));
+    // std::shared_ptr<LambertianMaterial> mat1(
+    //     new LambertianMaterial(Vec3(0.1f, 0.2f, 0.5f)));
+    // std::shared_ptr<LambertianMaterial> mat2(
+    //     new LambertianMaterial(Vec3(0.8f, 0.8f, 0.0f)));
+    // std::shared_ptr<MetalMaterial> mat3(
+    //     new MetalMaterial(Vec3(0.8f, 0.6f, 0.2f), 0.0f));
+    // std::shared_ptr<MetalMaterial> mat4(
+    //     new MetalMaterial(Vec3(1.0f, 1.0f, 1.0f), 0.1f));
+    // // std::shared_ptr<DielectricMaterial> mat4(new DielectricMaterial(1.5f));
+    // std::shared_ptr<DielectricMaterial> mat5(new DielectricMaterial(1.5f));
 
-    world->addSurface(std::shared_ptr<Sphere>(
-        new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, mat1)));
-    world->addSurface(std::shared_ptr<Sphere>(
-        new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, mat2)));
-    world->addSurface(std::shared_ptr<Sphere>(
-        new Sphere(Vec3(1.0f, 0.0f, -1.0f), 0.5f, mat3)));
-    world->addSurface(std::shared_ptr<Sphere>(
-        new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, mat4)));
-    world->addSurface(std::shared_ptr<Sphere>(
-        new Sphere(Vec3(-1.0f, 0.0f, -1.0f), -0.45f, mat5)));
+    // world->addSurface(std::shared_ptr<Sphere>(
+    //     new Sphere(Vec3(-0.5f, 0.0f, -1.0f), 0.5f, mat1)));
+    // world->addSurface(std::shared_ptr<Sphere>(
+    //     new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, mat2)));
+    // world->addSurface(std::shared_ptr<Sphere>(
+    //     new Sphere(Vec3(0.5f, 0.0f, -1.0f), 0.5f, mat3)));
+    // world->addSurface(std::shared_ptr<Sphere>(
+    //     new Sphere(Vec3(0.0f, 0.0f, 0.0f), 0.5f, mat5)));
+    // world->addSurface(std::shared_ptr<Sphere>(
+    //     new Sphere(Vec3(0.0f, 0.0f, 0.0f), -0.45f, mat5)));
+
+
+    std::shared_ptr<SurfaceList> world = getRandomScene();
 
     for (int j = ny - 1; j >= 0; j--) {
         for (int i = 0; i < nx; ++i) {
