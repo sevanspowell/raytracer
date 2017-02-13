@@ -9,6 +9,9 @@ std::random_device randDevice;
 std::mt19937 mt(randDevice());
 std::uniform_real_distribution<double> dist(0.0, 1.0);
 
+/// Get a random number in range [0, 1).
+float getRandom0To1() { return dist(mt); }
+
 /// Rejection method for getting a random point inside a unit sphere.
 trc::Vec3 randomInUnitSphere() {
     trc::Vec3 pt;
